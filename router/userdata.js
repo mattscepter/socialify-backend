@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const User = require("../Schema/userSchema");
+const Conversation = require("../Schema/conversationSchema");
 var fs = require("fs");
 
 const userDataRouter = express.Router();
@@ -55,7 +56,9 @@ userDataRouter.patch("/userdata", upload, async (req, res) => {
         function (err, res) {}
       );
       await User.updateOne({ _id: userId }, { discription, profileImg })
-        .then((response) => res.status(201).json("Updated"))
+        .then(async (response) => {
+          res.status(201).json("Updated");
+        })
         .catch((err) => res.status(401).json("Unable to add user data"));
     } else if (updateImg) {
       await fs.unlink(

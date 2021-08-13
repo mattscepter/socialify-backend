@@ -169,4 +169,39 @@ authRouter.get("/getUser/:id", async (req, res) => {
   }
 });
 
+authRouter.post("/getUserData", async (req, res) => {
+  try {
+    const data = req.body.data;
+    await User.find(
+      { _id: { $in: data } },
+      { userName: 1, name: 1, profileImg: 1 }
+    )
+      .then((response) => {
+        return res.status(201).json(response);
+      })
+      .catch((err) => {
+        console.log(err);
+        return res.status(401).json("Error fetching data");
+      });
+  } catch (error) {
+    console.log(error);
+    return res.status(401).json("Error fetching data");
+  }
+});
+
+authRouter.get("/userImg/:id", async (req, res) => {
+  try {
+    const _id = req.params.id;
+    await User.findById({ _id }, { profileImg: 1 })
+      .then((response) => {
+        return res.status(201).json(response);
+      })
+      .catch((err) => {
+        return res.status(401).json("Error fetching img");
+      });
+  } catch (error) {
+    return res.status(401).json("Error fetching img");
+  }
+});
+
 module.exports = authRouter;

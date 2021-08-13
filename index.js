@@ -7,8 +7,11 @@ const postRouter = require("./router/post");
 const followersRouter = require("./router/followers");
 const commentRouter = require("./router/comment.js");
 const userDataRouter = require("./router/userdata");
+const conversationRouter = require("./router/conversation.js");
 const User = require("./Schema/userSchema");
+const Followers = require("./Schema/followersSchema");
 const http = require("http");
+const RegexEscape = require("regex-escape");
 
 dotenv.config({ path: "./config.env" });
 
@@ -35,6 +38,7 @@ app.use("/api", followersRouter);
 app.use("/uploads", express.static("uploads"));
 app.use("/comments", commentRouter);
 app.use("/data", userDataRouter);
+app.use("/conversation", conversationRouter);
 
 const io = require("socket.io")(server, {
   cors: {
@@ -60,6 +64,7 @@ const getUser = (userId) => {
 io.on("connection", (socket) => {
   socket.on("addUser", (userId) => {
     addUser(userId, socket.id);
+    console.log(users);
     io.emit("getUsers", users);
   });
 
@@ -68,11 +73,11 @@ io.on("connection", (socket) => {
       User.find(
         {
           $or: [
-            { userName: { $regex: value, $options: "i" } },
-            { name: { $regex: value, $options: "i" } },
+            { userName: { $regex: RegexEscape(value), $options: "i" } },
+            { name: { $regex: RegexEscape(value), $options: "i" } },
           ],
         },
-        { userName: 1, name: 1, profileImg: 1, discription: 1 },
+        { userName: 1, name: 1, profileImg: 1 },
         function (err, user) {
           if (err) throw err;
           if (!user) socket.emit("find_user_result", {});
@@ -81,6 +86,22 @@ io.on("connection", (socket) => {
       ).limit(15);
     }
   });
+
+  socket.on(
+    "sendMessage",
+    ({ conversationId, senderId, recieverId, message }) => {
+      const user = getUser(recieverId);
+      try {
+        io.to(user.socketId).emit("getMessage", {
+          conversationId,
+          senderId,
+          message,
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  );
 
   socket.on("disconnect", () => {
     removeUser(socket.id);

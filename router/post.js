@@ -31,10 +31,18 @@ const upload = multer({
 
 postRouter.post("/addpost", upload, async (req, res) => {
   try {
-    const { title, caption, userId } = req.body;
+    const { title, caption, userId, userName, profileImg } = req.body;
+    console.log(req.body);
     if (req.file) {
       const imgPath = req.file.filename;
-      const post = new Post({ title, caption, userId, imgPath });
+      const post = new Post({
+        title,
+        caption,
+        userId,
+        imgPath,
+        userName,
+        profileImg,
+      });
       await post
         .save()
         .then(async (res) => {
@@ -43,31 +51,35 @@ postRouter.post("/addpost", upload, async (req, res) => {
             .save()
             .then()
             .catch((err) => {
-              return res.status(401).json({ error: "Can't add post" });
+              return res.status(401).json({ error: "Can't add post1" });
             });
         })
         .catch((err) => {
-          return res.status(401).json({ error: "Can't add post" });
+          return res.status(401).json({ error: "Can't add post2", err });
         });
     } else {
       if (!title && !caption) {
         return res.status(422).json({ error: "Fill atleast one field" });
       }
-      const post = new Post({ title, caption, userId });
-      await post.save().then(async (response) => {
-        const comment = new Comment({ postId: response._id });
-        await comment
-          .save()
-          .then()
-          .catch((err) => {
-            return res.status(401).json({ error: "Can't add post" });
-          });
-      });
+      const post = new Post({ title, caption, userId, userName, profileImg });
+      await post
+        .save()
+        .then(async (response) => {
+          const comment = new Comment({ postId: response._id });
+          await comment
+            .save()
+            .then()
+            .catch((err) => {
+              return res.status(401).json({ error: "Can't add post3" });
+            });
+        })
+        .catch((err) => {
+          return res.status(401).json({ error: "Can't add post4" });
+        });
     }
     return res.status(201).json("Posted");
   } catch (err) {
-    console.log(err);
-    return res.status(401).json({ error: "Can't add post" });
+    return res.status(401).json({ error: "Can't add post5" });
   }
 });
 
@@ -105,11 +117,9 @@ postRouter.get("/getposts/:id", async (req, res) => {
           });
       })
       .catch((err) => {
-        console.log(err);
         return res.status(401).json({ error: "Can't fetch data" });
       });
   } catch (err) {
-    console.log(err);
     return res.status(401).json({ error: "Can't fetch data" });
   }
 });

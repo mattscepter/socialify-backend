@@ -6,6 +6,14 @@ const postSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    userName: {
+      type: String,
+      required: true,
+    },
+    profileImg: {
+      type: String,
+      default: "",
+    },
     commentId: {
       type: String,
     },
